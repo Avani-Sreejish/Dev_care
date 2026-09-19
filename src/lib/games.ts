@@ -1,4 +1,4 @@
-import { eq, asc } from 'drizzle-orm';
+import { eq, asc, avg, count } from 'drizzle-orm';
 import type { Database } from './db';
 import { games, categories, publishers } from '../../db/schema';
 import type { Game } from '../types/game';
@@ -48,6 +48,30 @@ function baseGamesQuery(db: Database) {
         .from(games)
         .leftJoin(categories, eq(games.categoryId, categories.id))
         .leftJoin(publishers, eq(games.publisherId, publishers.id));
+}
+
+export interface CatalogSummary {
+    totalGames: number;
+    averageRating: number | null;
+}
+
+/** Summary stats for the full game catalog. */
+export async function getCatalogSummary(db: Database): Promise<CatalogSummary> {
+    const row = await db
+        .select({
+            totalGames: count(games.id),
+            averageRating: avg(games.starRating),
+        })
+        .from(games)
+        .get();
+
+    const totalGames = Number(row?.totalGames ?? 0);
+    const rawAverageRating = row?.averageRating;
+    const averageRating = rawAverageRating !== null && rawAverageRating !== undefined && rawAverageRating !== ''
+        ? Number((Math.round(Number(rawAverageRating) * 10) / 10).toFixed(1))
+        : null;
+
+    return { totalGames, averageRating };
 }
 
 /** All games ordered by title. */

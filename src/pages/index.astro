@@ -4,11 +4,12 @@ import GameCard from '../components/GameCard.astro';
 import PageHero from '../components/PageHero.astro';
 import EmptyState from '../components/EmptyState.astro';
 import { getDatabase } from '../lib/db';
-import { getAllGames } from '../lib/games';
+import { getAllGames, getCatalogSummary } from '../lib/games';
 
 export const prerender = true;
 
 const games = await getAllGames(getDatabase());
+const catalogSummary = await getCatalogSummary(getDatabase());
 ---
 
 <Layout title="Tailspin Toys - Crowdfunding your new favorite game!">
@@ -17,6 +18,24 @@ const games = await getAllGames(getDatabase());
       title="Welcome to Tailspin Toys"
       subtitle="Find your next game! And maybe even back one! Explore our collection!"
     />
+
+    <div class="mb-8 grid grid-cols-1 gap-4 md:grid-cols-2" data-testid="catalog-summary">
+      <div class="rounded-xl border border-slate-700 bg-slate-800 p-5 shadow-lg" data-testid="catalog-summary-total">
+        <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Catalog size</div>
+        <div class="mt-3 text-3xl font-semibold text-slate-100">{catalogSummary.totalGames}</div>
+        <p class="mt-1 text-slate-300">{catalogSummary.totalGames === 1 ? 'game in the catalog' : 'games in the catalog'}</p>
+      </div>
+
+      <div class="rounded-xl border border-slate-700 bg-slate-800 p-5 shadow-lg" data-testid="catalog-summary-average">
+        <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Average rating</div>
+        <div class="mt-3 text-3xl font-semibold text-slate-100">
+          {catalogSummary.averageRating === null ? 'N/A' : catalogSummary.averageRating.toFixed(1)}
+        </div>
+        <p class="mt-1 text-slate-300">
+          {catalogSummary.averageRating === null ? 'No rated games yet' : '/ 5 across rated games'}
+        </p>
+      </div>
+    </div>
 
     <div>
       <h2 class="text-2xl font-medium mb-6 text-slate-100">Featured Games</h2>
